@@ -40,5 +40,18 @@ export const addEditItem = async (
   }
 };
 
+export const editItemDetails = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    res.json(await itemServices.editItemDetails(req.body));
+
+  } catch (err) {
+    console.error((err as Error).message);
+    res.status(500);
+  }
+};
+
 
 
