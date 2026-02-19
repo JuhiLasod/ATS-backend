@@ -12,13 +12,29 @@ class ItemManagement {
             CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
         );
         try {
-            const result = await ItemMaster.findAndCountAll({
-                where: {
-                    isDeleted: 0,
-                    compId: req.data.id
-                }
-            });
+            let result;
+            if (req.data.id === "0") {
+                result = await ItemMaster.findAndCountAll({
+                    where: {
+                        isDeleted: 0,
+                    },
+                    include: [
+                        {
+                            model: CompanyMaster,
+                            as: "company",
 
+                        },
+                    ],
+                });
+            }
+            else {
+                result = await ItemMaster.findAndCountAll({
+                    where: {
+                        isDeleted: 0,
+                        compId: req.data.id
+                    }
+                });
+            }
             const totalCount = await ItemMaster.count({
                 where: {
                     isDeleted: 0,
@@ -61,6 +77,63 @@ class ItemManagement {
     }
 
 
+    public async editItemDetails(req: RequestModel): Promise<itemMasterModelDTO> {
+        const itemDTO: itemMasterModelDTO = new itemMasterModelDTO(
+            CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
+        );
+        const t = await sequelize.transaction();
+        try {
+            const id = req?.data?.id;
+            let newItem;
+            const existingCompany = await CompanyMaster.findOne({
+                where: { id: req.data.compId, isDeleted: 0 },
+                transaction: t
+            })
+            if (!existingCompany) {
+                await t.rollback();
+                CommonUtils.setResponse(itemDTO, [], eReturnCodes.R_NOT_FOUND);
+                return itemDTO;
+            }
+            await existingCompany.update(
+                {
+                    name: req.data.compName,
+                    updatedOn: new Date(),
+                },
+                { transaction: t }
+            );
+
+
+            const existingItem = await ItemMaster.findOne({
+                where: { id, isDeleted: 0 },
+                transaction: t
+            });
+            if (!existingItem) {
+                await t.rollback();
+                CommonUtils.setResponse(itemDTO, [], eReturnCodes.R_NOT_FOUND);
+                return itemDTO;
+            }
+            newItem = await existingItem.update(
+                {
+                    name: req.data.itemName,
+                    qty: req.data.qty,
+                    price: req.data.price,
+                    gstPrice: req.data.price,
+                    updatedOn: new Date(),
+                },
+                { transaction: t }
+            );
+            await t.commit();
+            CommonUtils.setResponse(itemDTO, newItem);
+            return itemDTO;
+        } catch (error: any) {
+            await t.rollback();
+            logger.error(
+                `Error Occured in itemService : addEditItem API- ${(error as Error).message}`
+            );
+            CommonUtils.setResponse(itemDTO, [], eReturnCodes.R_DB_ERROR);
+            return itemDTO;
+        }
+    }
     public async addEditItem(req: RequestModel): Promise<itemMasterModelDTO> {
         const itemDTO: itemMasterModelDTO = new itemMasterModelDTO(
             CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
