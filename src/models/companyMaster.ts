@@ -3,7 +3,7 @@ import { sequelize } from "../database/db";
 import BaseResponse from "./common/baseResponse";
 import CommonRequestModel from "./common/commonRequestModel";
 
-export class projectMasterModelDTO extends BaseResponse {
+export class companyMasterModelDTO extends BaseResponse {
   public filterModel: CommonRequestModel | undefined;
 }
 

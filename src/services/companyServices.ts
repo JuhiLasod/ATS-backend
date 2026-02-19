@@ -4,11 +4,11 @@ import logger from "../logger";
 import RequestModel from "../models/common/requestModel";
 import { CompanyMaster } from "../models/companyMaster";
 import CommonUtils from "../utils/common";
-import { comapnyMasterModelDTO } from "../models/itemMaster";
+import { companyMasterModelDTO } from "../models/companyMaster";
 
 class CompanyManagement {
-    public async getCompany(req: RequestModel): Promise<comapnyMasterModelDTO> {
-        const companyDTO: comapnyMasterModelDTO = new comapnyMasterModelDTO(
+    public async getCompany(req: RequestModel): Promise<companyMasterModelDTO> {
+        const companyDTO: companyMasterModelDTO = new companyMasterModelDTO(
             CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
         );
         try {
@@ -33,8 +33,8 @@ class CompanyManagement {
         }
     }
     
-    public async addEditCompany(req: RequestModel): Promise<comapnyMasterModelDTO> {
-        const companyDTO: comapnyMasterModelDTO = new comapnyMasterModelDTO(
+    public async addEditCompany(req: RequestModel): Promise<companyMasterModelDTO> {
+        const companyDTO: companyMasterModelDTO = new companyMasterModelDTO(
             CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
         );
         const t = await sequelize.transaction();
