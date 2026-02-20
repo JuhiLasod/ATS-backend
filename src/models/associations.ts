@@ -1,4 +1,7 @@
+import { bindAll } from "express-validator/lib/utils";
+import { BillMaster } from "./billMaster";
 import { CompanyMaster } from "./companyMaster";
+import { CustomerMaster } from "./customerMaster";
 import {ItemMaster } from "./itemMaster";
 
 
@@ -24,6 +27,18 @@ const setupAssociations = () => {
     ItemMaster.belongsTo(CompanyMaster, {
       foreignKey: "comp_id",
       as: "company",
+    });
+  });
+  addAssociationOnce(CustomerMaster, "bill", () => {
+    CompanyMaster.hasMany(BillMaster, {
+      foreignKey: "cust_id",
+      as: "bill",
+    });
+  });
+  addAssociationOnce(BillMaster, "customer", () => {
+    ItemMaster.belongsTo(CustomerMaster, {
+      foreignKey: "comp_id",
+      as: "customer",
     });
   });
   
