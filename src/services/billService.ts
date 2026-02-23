@@ -1,6 +1,7 @@
 import { sequelize } from "../database/db";
 import { eReturnCodes } from "../enums/commonEnums";
 import logger from "../logger";
+import qrcode from "qrcode";
 import RequestModel from "../models/common/requestModel";
 import { CompanyMaster } from "../models/companyMaster";
 import CommonUtils from "../utils/common";
@@ -95,5 +96,25 @@ class BillManagement {
             return billDTO;
         }
     }
+
+// qrroutes.get("/generate",async(req,res)=>{
+public async generateQr(req: any,res: any){
+    const am= req.params?.am;
+    const upilink=`upi://pay?pa=juhilasod29@okhdfcbank&pn=Juhi%20Lasod&am=${am}&cu=INR`;
+    try {
+        const qrDataURL = await qrcode.toDataURL(upilink, {
+  color: {
+    light: "#ffffff",   // QR code color (white)
+    dark: "#1a0000"   // Background color (black)
+  }
+});
+        console.log("qr generated");
+        res.json({ qr: qrDataURL });
+      } catch (err) {
+        console.log("gen qr failed")
+        res.status(500).json({ error: 'QR generation failed' });
+      }
+};
+
 }
 export default new BillManagement();
