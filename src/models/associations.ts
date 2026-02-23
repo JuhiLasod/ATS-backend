@@ -30,15 +30,27 @@ const setupAssociations = () => {
     });
   });
   addAssociationOnce(CustomerMaster, "bill", () => {
-    CompanyMaster.hasMany(BillMaster, {
+    CustomerMaster.hasMany(BillMaster, {
       foreignKey: "cust_id",
       as: "bill",
     });
   });
   addAssociationOnce(BillMaster, "customer", () => {
-    ItemMaster.belongsTo(CustomerMaster, {
-      foreignKey: "comp_id",
+    BillMaster.belongsTo(CustomerMaster, {
+      foreignKey: "cust_id",
       as: "customer",
+    });
+  });
+  addAssociationOnce(BillMaster, "item", () => {
+    BillMaster.belongsTo(ItemMaster, {
+      foreignKey: "item_id",
+      as: "item",
+    });
+  });
+  addAssociationOnce(ItemMaster, "itemBill", () => {
+    ItemMaster.hasMany(BillMaster, {
+      foreignKey: "item_id",
+      as: "itemBill",
     });
   });
   

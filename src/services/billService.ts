@@ -8,34 +8,51 @@ import { companyMasterModelDTO } from "../models/companyMaster";
 import { BillMaster, billMasterModelDTO } from "../models/billMaster";
 import { CustomerMaster } from "../models/customerMaster";
 import { v4 as uuidv4 } from "uuid";
+import { Model } from "sequelize";
+import { ItemMaster } from "../models/itemMaster";
 
 class BillManagement {
-    // public async getComp(req: RequestModel): Promise<companyMasterModelDTO> {
-    //     const companyDTO: companyMasterModelDTO = new companyMasterModelDTO(
-    //         CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
-    //     );
-    //     try {
-    //         const result = await CompanyMaster.findAndCountAll();
+    public async getSpecificBill(req: any): Promise<billMasterModelDTO> {
+        const billDTO: billMasterModelDTO = new billMasterModelDTO(
+            CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
+        );
+        try {
+            console.log("params", req.params.billId)
+            const result = await BillMaster.findAll({
+                where: {
+                    isDeleted: 0,
+                    billId: req.params?.billId
+                },
+                include: [
+                    {
+                        model: CustomerMaster,
+                        as: "customer",
+                    },
+                    {
+                        model: ItemMaster,
+                        as: "item",
+                        include: [
+                            {
+                                model: CompanyMaster,
+                                as: "company",
+                            },
+                        ]
+                    }
+                ],
 
-    //         const totalCount = await CompanyMaster.count({
-    //             where: { isDeleted: 0 },
-    //         });
+            });
 
-    //         CommonUtils.setResponse(companyDTO, result.rows);
-    //         // companyDTO.filterModel = CommonUtils.formatFilterModel(
-    //         //     // filterModel,
-    //         //     // totalCount
-    //         // );
-    //         return companyDTO;
-    //     } catch (error: any) {
-    //         logger.error(
-    //             `Error Occured in companyService : getCompany API - ${(error as Error).message}`
-    //         );
-    //         CommonUtils.setResponse(companyDTO, [], eReturnCodes.R_DB_ERROR);
-    //         return companyDTO;
-    //     }
-    // }
-    
+            CommonUtils.setResponse(billDTO, result);
+            return billDTO;
+        } catch (error: any) {
+            logger.error(
+                `Error Occured in billService : getSpecificBill API - ${(error as Error).message}`
+            );
+            CommonUtils.setResponse(billDTO, [], eReturnCodes.R_DB_ERROR);
+            return billDTO;
+        }
+    }
+
     public async addBill(req: RequestModel): Promise<billMasterModelDTO> {
         const billDTO: billMasterModelDTO = new billMasterModelDTO(
             CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
@@ -47,13 +64,13 @@ class BillManagement {
                     name: req.data.customerName,
                     location: req.data.cutomerLocation,
                     mobile: req.data.customerMobile,
-                    createdOn : new Date(),
-                }, 
-                {   
+                    createdOn: new Date(),
+                },
+                {
                     transaction: t
                 }
             )
-            const custId= newCust.id;
+            const custId = newCust.id;
             const billId = Date.now()
             const newBill = await BillMaster.bulkCreate(
                 req.data.items.map((item: any) => ({
@@ -64,7 +81,7 @@ class BillManagement {
                     price: item.price,
                     createdOn: new Date(),
                 })),
-                    { transaction: t }
+                { transaction: t }
             );
             await t.commit();
             CommonUtils.setResponse(billDTO, newBill);
@@ -77,6 +94,6 @@ class BillManagement {
             CommonUtils.setResponse(billDTO, [], eReturnCodes.R_DB_ERROR);
             return billDTO;
         }
-    } 
+    }
 }
 export default new BillManagement();
