@@ -1,5 +1,6 @@
 class RequestModel {
   public data!: any;
+  public params!: any;
   public auth_token!: AuthorizationModel;
   public filterModel?: any;
   constructor() { }
