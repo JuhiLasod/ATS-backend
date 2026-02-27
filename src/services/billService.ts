@@ -13,6 +13,45 @@ import { Model } from "sequelize";
 import { ItemMaster } from "../models/itemMaster";
 
 class BillManagement {
+    public async getBills(req: any): Promise<billMasterModelDTO> {
+        const billDTO: billMasterModelDTO = new billMasterModelDTO(
+            CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
+        );
+        try {
+            console.log("params", req.params.billId)
+            const result = await BillMaster.findAll({
+                where: {
+                    isDeleted: 0,
+                },
+                include: [
+                    {
+                        model: CustomerMaster,
+                        as: "customer",
+                    },
+                    {
+                        model: ItemMaster,
+                        as: "item",
+                        include: [
+                            {
+                                model: CompanyMaster,
+                                as: "company",
+                            },
+                        ]
+                    }
+                ],
+
+            });
+
+            CommonUtils.setResponse(billDTO, result);
+            return billDTO;
+        } catch (error: any) {
+            logger.error(
+                `Error Occured in billService : getSpecificBill API - ${(error as Error).message}`
+            );
+            CommonUtils.setResponse(billDTO, [], eReturnCodes.R_DB_ERROR);
+            return billDTO;
+        }
+    }
     public async getSpecificBill(req: any): Promise<billMasterModelDTO> {
         const billDTO: billMasterModelDTO = new billMasterModelDTO(
             CommonUtils.getDataResponse(eReturnCodes.R_DB_ERROR)
@@ -60,10 +99,30 @@ class BillManagement {
         );
         const t = await sequelize.transaction();
         try {
+            if (req.data.id) {
+                const existingBills = await BillMaster.findAll({
+                    where: {
+                        id: req.data.id,
+                        isDeleted: 0
+                    },
+                    transaction: t
+                })
+                if (!existingBills) {
+                    logger.error(
+                        "bill does not exist"
+                    );
+                    CommonUtils.setResponse(billDTO, [], eReturnCodes.R_DB_ERROR);
+                    return billDTO;
+                }
+                const existingMap = new Map(
+                    existingBills.map(b => [b.itemId, b])
+                );
+
+            }
             const newCust = await CustomerMaster.create(
                 {
                     name: req.data.customerName,
-                    location: req.data.cutomerLocation,
+                    location: req.data.customerLocation,
                     mobile: req.data.customerMobile,
                     createdOn: new Date(),
                 },
@@ -80,10 +139,35 @@ class BillManagement {
                     itemId: item.itemId,
                     qty: item.qty,
                     price: item.price,
+                    upi: item.upi,
                     createdOn: new Date(),
                 })),
                 { transaction: t }
             );
+            for (const item of req.data.items) {
+
+                const existingItem: any = await ItemMaster.findOne({
+                    where: { id: item.itemId },
+                    transaction: t
+                });
+
+                if (!existingItem) {
+                    throw new Error("Item not found");
+                }
+
+                if (existingItem.qty < item.qty) {
+                    throw new Error(`Insufficient stock for item ID ${item.itemId}`);
+                }
+
+                await ItemMaster.update(
+                    { qty: existingItem.qty - item.qty },
+                    {
+                        where: { id: item.itemId },
+                        transaction: t
+                    }
+                );
+            }
+
             await t.commit();
             CommonUtils.setResponse(billDTO, newBill);
             return billDTO;
@@ -97,24 +181,24 @@ class BillManagement {
         }
     }
 
-// qrroutes.get("/generate",async(req,res)=>{
-public async generateQr(req: any,res: any){
-    const am= req.params?.am;
-    const upilink=`upi://pay?pa=juhilasod29@okhdfcbank&pn=Juhi%20Lasod&am=${am}&cu=INR`;
-    try {
-        const qrDataURL = await qrcode.toDataURL(upilink, {
-  color: {
-    light: "#ffffff",   // QR code color (white)
-    dark: "#1a0000"   // Background color (black)
-  }
-});
-        console.log("qr generated");
-        res.json({ qr: qrDataURL });
-      } catch (err) {
-        console.log("gen qr failed")
-        res.status(500).json({ error: 'QR generation failed' });
-      }
-};
+    // qrroutes.get("/generate",async(req,res)=>{
+    public async generateQr(req: any, res: any) {
+        const am = req.params?.am;
+        const upilink = `upi://pay?pa=juhilasod29@okhdfcbank&pn=Juhi%20Lasod&am=${am}&cu=INR`;
+        try {
+            const qrDataURL = await qrcode.toDataURL(upilink, {
+                color: {
+                    light: "#ffffff",   // QR code color (white)
+                    dark: "#1a0000"   // Background color (black)
+                }
+            });
+            console.log("qr generated");
+            res.json({ qr: qrDataURL });
+        } catch (err) {
+            console.log("gen qr failed")
+            res.status(500).json({ error: 'QR generation failed' });
+        }
+    };
 
 }
 export default new BillManagement();

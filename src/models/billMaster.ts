@@ -9,6 +9,7 @@ export class billMasterModelDTO extends BaseResponse {
 
 export class BillMaster extends Model {
     public id!: number;
+    public upi!: number;
     public billId!: number;
     public custId!: number;
     public itemId!: number;
@@ -53,6 +54,11 @@ BillMaster.init(
             type: DataTypes.STRING,
             allowNull: true,
             field: "price",
+        },
+        upi: {
+            type: DataTypes.TINYINT,
+            defaultValue: 0,
+            allowNull: false,
         },
         createdOn: {
             type: DataTypes.DATE,

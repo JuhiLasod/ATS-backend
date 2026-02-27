@@ -3,7 +3,7 @@ import authMiddleware from "../middleware/authMiddleware";
 import UserValidations from "../validations/uservalidation";
 import { addEditCompany, getCompany } from "../controllers/companyController";
 import { addEditItem, editItemDetails, getItem, getSpecificItem } from "../controllers/itemController";
-import { addBill, getSpecificBill } from "../controllers/billController";
+import { addBill, getBills, getSpecificBill } from "../controllers/billController";
 import billService from "../services/billService";
 
 const router = Router();
@@ -19,6 +19,7 @@ router.post("/editItemDetails", editItemDetails);
 
 router.post("/generate-bill", addBill);
 router.post("/bill/:billId", getSpecificBill);
+router.post("/bills", getBills);
 router.get("/generateqr/:am", billService.generateQr);
 
 
