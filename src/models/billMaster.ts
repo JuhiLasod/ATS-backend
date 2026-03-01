@@ -14,6 +14,8 @@ export class BillMaster extends Model {
     public custId!: number;
     public itemId!: number;
     public qty!: string;
+    public merged!: number;
+    public avl!: number;
     public price!: string;
     public createdOn?: Date;
     public updatedOn?: Date;
@@ -55,9 +57,19 @@ BillMaster.init(
             allowNull: true,
             field: "price",
         },
-        upi: {
-            type: DataTypes.TINYINT,
+        merged: {
+            type: DataTypes.BIGINT,
             defaultValue: 0,
+            allowNull: false,
+        },
+        upi: {
+            type: DataTypes.BIGINT,
+            defaultValue: 0,
+            allowNull: false,
+        },
+        avl: {
+            type: DataTypes.TINYINT,
+            defaultValue: 1,
             allowNull: false,
         },
         createdOn: {
